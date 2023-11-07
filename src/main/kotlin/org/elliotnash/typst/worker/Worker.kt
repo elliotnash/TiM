@@ -12,6 +12,8 @@ import java.util.Queue
 import java.util.concurrent.CompletableFuture
 import kotlin.concurrent.thread
 
+const val EOT = 0x04
+
 class Worker {
     private var process = ProcessBuilder("worker/target/release/worker").start()
     private var processMutex = Mutex()
@@ -32,7 +34,7 @@ class Worker {
             runBlocking {
                 while (true) {
                     var alive = true
-                    while (alive) {
+                    while (alive ) {
                         val buf = StringBuffer()
                         while (true) {
                             val byte = process.inputStream.read()
@@ -41,15 +43,19 @@ class Worker {
                                 alive = false
                                 break
                             }
-                            buf.append(byte.toChar())
-                            val res = tryParseResponse(buf.toString())
-                            if (res != null) {
-                                onResponseReceived(res)
+                            if (byte == EOT) {
+                                val res = tryParseResponse(buf.toString())
+                                if (res != null) {
+                                    onResponseReceived(res)
+                                }
                                 break
+                            } else {
+                                buf.append(byte.toChar())
                             }
                         }
                     }
                     // Start new worker
+                    println("Starting new worker")
                     processMutex.lock(this)
                     process.destroy()
                     process = ProcessBuilder("worker/target/release/worker").start()

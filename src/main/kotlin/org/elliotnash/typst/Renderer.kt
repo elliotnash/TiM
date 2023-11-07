@@ -44,6 +44,7 @@ class MessageListener(val client: Client) : EventListener {
 
     private fun render(message: Message, code: String) {
         runBlocking {
+            print("TRYING TO RENDER: $code")
             try {
                 val output = renderer.render(code)
                 message.reply("typst.png", output)
@@ -52,6 +53,7 @@ class MessageListener(val client: Client) : EventListener {
             } catch (e: TypstTimeoutError) {
                 message.reply("Typst compilation timed out!")
             }
+            print("RESPONDED")
         }
     }
 }

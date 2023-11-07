@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::model::{RenderRequest, Request, Response, VersionResponse};
 use crate::render::{render, RenderOptions};
 
+const EOT: u8 = 0x04;
 
 fn main() {
     // let test = Request::Version();
@@ -27,6 +28,7 @@ fn main() {
         };
 
         serde_json::to_writer(stdout(), &res).expect("TODO: panic message");
+        stdout().write(&[EOT]).expect("TODO: panic message");
         stdout().flush().unwrap();
     }
 }
