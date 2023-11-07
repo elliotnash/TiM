@@ -16,7 +16,7 @@ val test = """
 """.trimIndent()
 
 fun main(args: Array<String>): Unit = runBlocking {
-    val client = Client("https://bb.elliotnash.org", "NONE")
+    val client = Client(System.getenv("SERVER_URL"), System.getenv("PASSWORD"))
     client.registerEventListener(MessageListener(client))
     client.run()
 }
