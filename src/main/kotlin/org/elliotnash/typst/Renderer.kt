@@ -26,7 +26,9 @@ class MessageListener(val client: Client) : EventListener {
     private val codeRegex = Regex("(?<=( |^|\\n))\\$[^\$]+?\\$(?=( |$|\n))")
 
     override fun onMessage(message: Message) {
-        if (message.text.startsWith("?render")) {
+        if (message.text.lowercase().trim() == "!ping") {
+            render(message, "#set text(fill: gradient.linear(..color.map.rainbow))\nPong!")
+        } else if (message.text.lowercase().startsWith("!render")) {
             render(message, message.text.substring(8))
         } else {
             val matches = codeRegex.matchEntire(message.text)
