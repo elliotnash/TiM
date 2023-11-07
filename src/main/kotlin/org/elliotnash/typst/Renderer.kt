@@ -29,7 +29,7 @@ class MessageListener(val client: Client) : EventListener {
         if (message.text.lowercase().trim() == "!ping") {
             render(message, "#set text(fill: gradient.linear(..color.map.rainbow))\nPong!")
         } else if (message.text.lowercase().trim() == "!bing") {
-            render(message, "#set text(fill: gradient.linear(rgb(\"#ff0000\"), rgb(\"#0000ff\")))\nPong!")
+            render(message, "#set text(fill: gradient.linear(rgb(\"#ff0000\"), rgb(\"#0000ff\")))\nBong!")
         } else if (message.text.lowercase().startsWith("!render")) {
             render(message, message.text.substring(8))
         } else {
