@@ -15,9 +15,19 @@ Inspired by [typst-bot](https://github.com/mattfbacon/typst-bot) for discord!
 - [Rust](https://rustup.rs/) toolchain
 
 ### Installation
-
+To get started, clone the git repo
 ```shell
 git clone https://github.com/elliotnash/TiM.git
 cd TiM
-./gradlew run
 ```
+
+You must copy the `EXAMPLE.env` file to `.env`, and fill out the required parameters.
+If running on the same machine as BlueBubbles, `BB_URL` should be set to `http://localhost:{BB_PORT}`
+
+To compile TiM, run
+```shell
+./gradlew fatJar
+```
+This will output 4 files in `build/libs` — the compiled jar, the rust worker binary, a launcher script, and a copy of the .env file in the root. These output files need to remain in the same directory.
+
+To run TiM, run `./TiM`
