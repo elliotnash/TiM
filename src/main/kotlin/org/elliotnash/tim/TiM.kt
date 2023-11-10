@@ -5,16 +5,34 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.elliotnash.blueify.Client
+import java.io.File
 
 const val DEFAULT_POOL_SIZE = 5
 const val DEFAULT_PREFIX = "!"
 
 val json = Json
-val dotenv = dotenv()
 
 private val logger = KotlinLogging.logger {}
 
 fun main(args: Array<String>): Unit = runBlocking {
+    if (args.size != 2) {
+        println("Error: Incorrect arguments!\nUsage: java -jar TiM.jar <path/to/.env> <path/to/worker>")
+        return@runBlocking
+    }
+
+    val deFile = File(args[0])
+    val workerFile = File(args[1])
+
+    if (!deFile.exists() || !workerFile.exists()) {
+        println("Error: Incorrect arguments!\nUsage: java -jar TiM.jar <path/to/.env> <path/to/worker>")
+        return@runBlocking
+    }
+
+    val dotenv = dotenv {
+        directory = deFile.canonicalFile.parent
+        filename = deFile.name
+    }
+
     val url = dotenv["BB_URL"]
     val password = dotenv["BB_PASSWORD"]
     val poolSize = dotenv["POOL_SIZE"]?.toIntOrNull() ?: DEFAULT_POOL_SIZE
@@ -30,7 +48,7 @@ fun main(args: Array<String>): Unit = runBlocking {
     }
 
     val client = Client(url, password)
-    val listener = MessageListener(poolSize = poolSize, prefix = prefix)
+    val listener = MessageListener(workerPath = workerFile.canonicalPath, poolSize = poolSize, prefix = prefix)
     client.registerEventListener(listener)
 
     client.run()

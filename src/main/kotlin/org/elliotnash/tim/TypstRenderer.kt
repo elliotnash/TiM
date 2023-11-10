@@ -7,8 +7,8 @@ import org.elliotnash.blueify.model.Message
 import org.elliotnash.tim.worker.*
 import java.lang.Exception
 
-class MessageListener(val poolSize: Int, val prefix: String) : EventListener {
-    private val renderer = TypstRenderer(poolSize)
+class MessageListener(val workerPath: String, val poolSize: Int, val prefix: String) : EventListener {
+    private val renderer = TypstRenderer(workerPath, poolSize)
     private val codeRegex = Regex("(?<= |^)\\$[^$]+?\\$(?= |$)")
 
     override fun onMessage(message: Message) {
@@ -46,8 +46,8 @@ class MessageListener(val poolSize: Int, val prefix: String) : EventListener {
     }
 }
 
-class TypstRenderer(val poolSize: Int) {
-    private val workerPool = List(poolSize) { Worker() }
+class TypstRenderer(private val workerPath: String, val poolSize: Int) {
+    private val workerPool = List(poolSize) { Worker(workerPath) }
 
     private fun getPooledWorker() = workerPool.minBy { it.queueLength }
 

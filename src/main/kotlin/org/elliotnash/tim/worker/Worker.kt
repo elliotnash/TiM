@@ -1,7 +1,9 @@
 package org.elliotnash.tim.worker
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -15,9 +17,10 @@ import kotlin.time.Duration.Companion.seconds
 
 const val EOT = 0x04
 
-class Worker(private val timeout: Duration = 3.seconds) {
+class Worker(private val workerPath: String, val timeout: Duration = 3.seconds) {
     private lateinit var process: Process
     private var requestChannel = Channel<QueuedRequest>(Channel.UNLIMITED)
+    private val logger = KotlinLogging.logger {}
 
     val isWorking
         get() = queueLength == 0
@@ -47,11 +50,10 @@ class Worker(private val timeout: Duration = 3.seconds) {
         runBlocking {
             while (rwAlive) {
                 // Need to start a new process
-                println("Starting new worker")
-                process = ProcessBuilder("worker/target/release/worker").start()
+                logger.debug {"Starting new worker"}
+                process = newWorkerProcess()
 
-                var processAlive = true
-                while (processAlive && rwAlive) {
+                process@ while (rwAlive) {
                     // We wait to receive the next request
                     val request = requestChannel.receive()
 
@@ -65,21 +67,19 @@ class Worker(private val timeout: Duration = 3.seconds) {
                     // Now we read the response
                     val endTime = Clock.System.now() + timeout
                     val buf = StringBuffer()
-                    while (true) {
+                    while (rwAlive) {
                         if (Clock.System.now() > endTime) {
                             // We should kill the process if it's been longer than the timeout
-                            println("Worker timed out!")
+                            logger.debug {"Worker timed out!"}
                             request.response.complete(null)
-                            processAlive = false
-                            break
+                            break@process
                         } else if (process.inputStream.available() > 0) {
                             val byte = process.inputStream.read()
                             if (byte < 0) {
                                 // The process died, we need to start a new one :)
-                                println("Worker died!")
+                                logger.debug {"Worker died!"}
                                 request.response.complete(null)
-                                processAlive = false
-                                break
+                                break@process
                             }
                             if (byte == EOT) {
                                 // We hit the terminator so our response is complete, time to parse
@@ -98,30 +98,9 @@ class Worker(private val timeout: Duration = 3.seconds) {
         }
     }
 
-//    private var writeAlive = true
-//    private val writeThread = thread {
-//        runBlocking {
-//            while (writeAlive) {
-//
-//                // Wait on next request
-//                val request = requestChannel.receive()
-//
-//                processMutex.withLock {
-//                    val future = CompletableFuture<Response?>()
-//                    futures.add(future)
-//
-//                    val data = json.encodeToString(request)
-//                    withContext(Dispatchers.IO) {
-//                        process.outputStream.write(data.toByteArray())
-//                        process.outputStream.flush()
-//                    }
-//                }
-//
-//                val response =  future.await()
-//                return response
-//            }
-//        }
-//    }
+    private fun newWorkerProcess(): Process {
+        return ProcessBuilder(workerPath).start()
+    }
 
     init {
         thread {
@@ -131,6 +110,11 @@ class Worker(private val timeout: Duration = 3.seconds) {
                 _version.complete(response.version)
             }
         }
+
+        Runtime.getRuntime().addShutdownHook(thread(start = false) {
+            logger.debug {"Shutting down worker"}
+            stop()
+        })
     }
 
     private fun tryParseResponse(data: String): Response? {
