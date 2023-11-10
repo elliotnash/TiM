@@ -1,0 +1,12 @@
+[Unit]
+Description=TiM
+
+[Service]
+WorkingDirectory=/path/to/TiM/dir
+ExecStart=/path/to/TiM/dir/TiM
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

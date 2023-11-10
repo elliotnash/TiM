@@ -14,7 +14,7 @@ Inspired by [typst-bot](https://github.com/mattfbacon/typst-bot) for discord!
 
 - [Rust](https://rustup.rs/) toolchain
 
-### Installation
+### Compiling
 To get started, clone the git repo
 ```shell
 git clone https://github.com/elliotnash/TiM.git
@@ -30,4 +30,8 @@ To compile TiM, run
 ```
 This will output 4 files in `build/libs` — the compiled jar, the rust worker binary, a launcher script, and a copy of the .env file in the root. These output files need to remain in the same directory.
 
+### Running
+
 To run TiM, run `./TiM`
+
+A very basic systemd service file can be found is available [here](scripts/TiM.service)
