@@ -9,7 +9,7 @@ import java.lang.Exception
 
 class MessageListener(val poolSize: Int, val prefix: String) : EventListener {
     private val renderer = TypstRenderer(poolSize)
-    private val codeRegex = Regex("(?<=( |^|\\n))\\$[^$]+?\\$(?=( |$|\\n))")
+    private val codeRegex = Regex("(?<= |^)\\$[^$]+?\\$(?= |$)")
 
     override fun onMessage(message: Message) {
         val text = message.text.lowercase().trim()
@@ -24,13 +24,9 @@ class MessageListener(val poolSize: Int, val prefix: String) : EventListener {
                 render(message, message.text.substring(8))
             }
             else -> {
-                val matches = codeRegex.matchEntire(message.text)
-                if (matches != null) {
-                    for (value in matches.groupValues) {
-                        if (value.isNotBlank()) {
-                            render(message, value)
-                        }
-                    }
+                val matches = codeRegex.findAll(message.text)
+                for (match in matches) {
+                    render(message, match.value)
                 }
             }
         }
