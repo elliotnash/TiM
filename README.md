@@ -15,3 +15,9 @@ Inspired by [typst-bot](https://github.com/mattfbacon/typst-bot) for discord!
 - [Rust](https://rustup.rs/) toolchain
 
 ### Installation
+
+```shell
+git clone https://github.com/elliotnash/TiM.git
+cd TiM
+./gradlew run
+```
