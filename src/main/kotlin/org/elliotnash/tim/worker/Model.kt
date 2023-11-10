@@ -1,4 +1,4 @@
-package org.elliotnash.typst.worker
+package org.elliotnash.tim.worker
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -10,8 +10,8 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
-import org.elliotnash.typst.PageSize
-import org.elliotnash.typst.Theme
+import org.elliotnash.tim.PageSize
+import org.elliotnash.tim.Theme
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 

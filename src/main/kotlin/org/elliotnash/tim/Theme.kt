@@ -1,4 +1,4 @@
-package org.elliotnash.typst
+package org.elliotnash.tim
 
 enum class Theme {
     Dark,
