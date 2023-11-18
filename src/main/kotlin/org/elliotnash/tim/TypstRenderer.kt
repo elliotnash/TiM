@@ -1,18 +1,20 @@
 package org.elliotnash.tim
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
-import org.elliotnash.blueify.Client
 import org.elliotnash.blueify.EventListener
 import org.elliotnash.blueify.model.Message
 import org.elliotnash.tim.worker.*
 import java.lang.Exception
 
 class MessageListener(val workerPath: String, val poolSize: Int, val prefix: String) : EventListener {
+    private val logger = KotlinLogging.logger {}
     private val renderer = TypstRenderer(workerPath, poolSize)
     private val codeRegex = Regex("(?<= |^)\\$[^$]+?\\$(?= |$)")
 
     override fun onMessage(message: Message) {
         val text = message.text.lowercase().trim()
+        logger.trace {"received message: $text"}
         when {
             text == "${prefix}ping" -> {
                 render(message, "#set text(fill: gradient.linear(..color.map.rainbow))\nPong!")
@@ -47,6 +49,7 @@ class MessageListener(val workerPath: String, val poolSize: Int, val prefix: Str
 }
 
 class TypstRenderer(private val workerPath: String, val poolSize: Int) {
+    private val logger = KotlinLogging.logger {}
     private val workerPool = List(poolSize) { Worker(workerPath) }
 
     private fun getPooledWorker() = workerPool.minBy { it.queueLength }
@@ -60,7 +63,8 @@ class TypstRenderer(private val workerPath: String, val poolSize: Int) {
         val options = RenderOptions(pageSize, theme, transparent)
         val request = RenderRequest(code, options)
 
-        val response = getPooledWorker().request(Render(request))
+        val worker = getPooledWorker()
+        val response = worker.request(Render(request))
 
         return when (response) {
             is RenderSuccess -> response.renderSuccess

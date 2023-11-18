@@ -20,7 +20,7 @@ const val EOT = 0x04
 class Worker(private val workerPath: String, val timeout: Duration = 8.seconds) {
     private lateinit var process: Process
     private var requestChannel = Channel<QueuedRequest>(Channel.UNLIMITED)
-    private val logger = KotlinLogging.logger {}
+    private val logger = KotlinLogging.logger("Worker@${hashCode().toString(16)}")
 
     val isWorking
         get() = queueLength == 0
@@ -107,6 +107,7 @@ class Worker(private val workerPath: String, val timeout: Duration = 8.seconds) 
             runBlocking {
                 // fetch version info
                 val response = request(VersionRequest()) as VersionResponse
+                logger.debug {"Version: ${response.version}"}
                 _version.complete(response.version)
             }
         }
