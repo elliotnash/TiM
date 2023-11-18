@@ -17,7 +17,7 @@ import kotlin.time.Duration.Companion.seconds
 
 const val EOT = 0x04
 
-class Worker(private val workerPath: String, val timeout: Duration = 8.seconds) {
+class Worker(private val workerPath: String, val timeout: Duration = 4.seconds) {
     private lateinit var process: Process
     private var requestChannel = Channel<QueuedRequest>(Channel.UNLIMITED)
     private val logger = KotlinLogging.logger("Worker@${hashCode().toString(16)}")
