@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.elliotnash.blueify:Blueify:1.2.0-SNAPSHOT")
+    implementation("org.elliotnash.blueify:Blueify:1.3.0-SNAPSHOT")
 
     // KotlinX libraries
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")

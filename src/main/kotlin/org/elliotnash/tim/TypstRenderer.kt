@@ -34,6 +34,10 @@ class MessageListener(val workerPath: String, val poolSize: Int, val prefix: Str
         }
     }
 
+    override fun onShutdown() {
+        renderer.shutdown()
+    }
+
     private fun render(message: Message, code: String) {
         runBlocking {
             try {
@@ -70,6 +74,12 @@ class TypstRenderer(private val workerPath: String, val poolSize: Int) {
             is RenderSuccess -> response.renderSuccess
             is RenderError -> throw TypstRenderError(response.renderError)
             else -> throw TypstTimeoutError()
+        }
+    }
+
+    fun shutdown() {
+        for (worker in workerPool) {
+            worker.stop()
         }
     }
 }

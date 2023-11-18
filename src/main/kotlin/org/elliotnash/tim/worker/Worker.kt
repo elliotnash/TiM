@@ -40,61 +40,69 @@ class Worker(private val workerPath: String, val timeout: Duration = 8.seconds) 
     }
 
     fun stop() {
+        logger.debug {"stopping worker"}
         rwAlive = false
+        rwThread.interrupt()
+        process.destroy()
         // Wait until thread stops
         while (rwThread.isAlive) {}
     }
 
     private var rwAlive = true
     private val rwThread = thread {
-        runBlocking {
-            while (rwAlive) {
-                // Need to start a new process
-                logger.debug {"Starting new worker"}
-                process = newWorkerProcess()
+        try {
+            runBlocking {
+                while (rwAlive) {
+                    // Need to start a new process
+                    logger.debug { "Starting new worker" }
+                    process = newWorkerProcess()
 
-                process@ while (rwAlive) {
-                    // We wait to receive the next request
-                    val request = requestChannel.receive()
+                    process@ while (rwAlive) {
+                        // We wait to receive the next request
+                        val request = requestChannel.receive()
 
-                    // Once we have a request, we send it
-                    val data = json.encodeToString(request.request)
-                    withContext(Dispatchers.IO) {
-                        process.outputStream.write(data.toByteArray())
-                        process.outputStream.flush()
-                    }
+                        // Once we have a request, we send it
+                        val data = json.encodeToString(request.request)
+                        withContext(Dispatchers.IO) {
+                            process.outputStream.write(data.toByteArray())
+                            process.outputStream.flush()
+                        }
 
-                    // Now we read the response
-                    val endTime = Clock.System.now() + timeout
-                    val buf = StringBuffer()
-                    while (rwAlive) {
-                        if (Clock.System.now() > endTime) {
-                            // We should kill the process if it's been longer than the timeout
-                            logger.debug {"Worker timed out!"}
-                            request.response.complete(null)
-                            break@process
-                        } else if (process.inputStream.available() > 0) {
-                            val byte = process.inputStream.read()
-                            if (byte < 0) {
-                                // The process died, we need to start a new one :)
-                                logger.debug {"Worker died!"}
+                        // Now we read the response
+                        val endTime = Clock.System.now() + timeout
+                        val buf = StringBuffer()
+                        while (rwAlive) {
+                            if (Clock.System.now() > endTime) {
+                                // We should kill the process if it's been longer than the timeout
+                                logger.debug { "Worker timed out!" }
                                 request.response.complete(null)
                                 break@process
-                            }
-                            if (byte == EOT) {
-                                // We hit the terminator so our response is complete, time to parse
-                                request.response.complete(tryParseResponse(buf.toString()))
-                                break
-                            } else {
-                                buf.append(byte.toChar())
+                            } else if (process.inputStream.available() > 0) {
+                                val byte = process.inputStream.read()
+                                if (byte < 0) {
+                                    // The process died, we need to start a new one :)
+                                    logger.debug { "Worker died!" }
+                                    request.response.complete(null)
+                                    break@process
+                                }
+                                if (byte == EOT) {
+                                    // We hit the terminator so our response is complete, time to parse
+                                    request.response.complete(tryParseResponse(buf.toString()))
+                                    break
+                                } else {
+                                    buf.append(byte.toChar())
+                                }
                             }
                         }
                     }
-                }
 
-                // The process either died or we're shutting down, either way the old process should be cleaned up
-                process.destroy()
+                    // The process either died or we're shutting down, either way the old process should be cleaned up
+                    process.destroy()
+                }
             }
+        } catch (_: InterruptedException) {
+            logger.debug {"thread interrupted"}
+            process.destroy()
         }
     }
 

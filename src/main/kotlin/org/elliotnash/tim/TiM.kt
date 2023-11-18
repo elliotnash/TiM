@@ -5,6 +5,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.elliotnash.blueify.Client
+import sun.misc.Signal
 import java.io.File
 
 const val DEFAULT_POOL_SIZE = 5
@@ -50,6 +51,10 @@ fun main(args: Array<String>): Unit = runBlocking {
     val client = Client(url, password)
     val listener = MessageListener(workerPath = workerFile.canonicalPath, poolSize = poolSize, prefix = prefix)
     client.registerEventListener(listener)
+
+    Signal.handle(Signal("INT")) {
+        client.shutdown()
+    }
 
     client.run()
 }
