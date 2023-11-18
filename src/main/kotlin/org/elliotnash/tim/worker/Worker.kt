@@ -107,6 +107,7 @@ class Worker(private val workerPath: String, val timeout: Duration = 4.seconds) 
     }
 
     private fun newWorkerProcess(): Process {
+        logger.error {"creating new with $workerPath"}
         return ProcessBuilder(workerPath).start()
     }
 
@@ -115,7 +116,7 @@ class Worker(private val workerPath: String, val timeout: Duration = 4.seconds) 
             runBlocking {
                 // fetch version info
                 val response = request(VersionRequest()) as VersionResponse
-                logger.debug {"Version: ${response.version}"}
+                logger.debug {response.version}
                 _version.complete(response.version)
             }
         }

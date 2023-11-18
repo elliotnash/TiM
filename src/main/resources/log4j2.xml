@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration>
-    <Properties>
-        <Property name="log4j.level" value="INFO" />
-    </Properties>
+<Configuration status="WARN">
     <Appenders>
         <Console name="console" target="SYSTEM_OUT">
             <PatternLayout pattern="%highlight{%d{yyyy-MM-dd HH:mm:ss} %-5p (%c{1}:%L) - %m%n%throwable}{FATAL=bright_red bold, ERROR=red, WARN=bright_yellow, INFO=default, DEBUG=green, TRACE=cyan}"/>
         </Console>
     </Appenders>
-    <loggers>
-        <Root level="${sys:log4j.level}">
+    <Loggers>
+        <Root level="DEBUG">
             <appender-ref ref="console"/>
         </Root>
-    </loggers>
+    </Loggers>
 </Configuration>

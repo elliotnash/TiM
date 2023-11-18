@@ -2,22 +2,14 @@ mod sandbox;
 mod render;
 mod model;
 
-use std::error::Error;
-use std::fmt::Display;
-use std::io::{Read, stdin, stdout, Write};
-use no_comment::IntoWithoutComments;
-
-use typst::World;
-use serde::{Deserialize, Serialize};
+use std::io::{stdin, stdout, Write};
+use serde::Deserialize;
 use crate::model::{RenderRequest, Request, Response, VersionResponse};
-use crate::render::{render, RenderOptions};
+use crate::render::render;
 
 const EOT: u8 = 0x04;
 
 fn main() {
-    // let test = Request::Version();
-    // let val = serde_json::to_string(&test).unwrap();
-    // println!("{}", val);
     loop {
         let mut de = serde_json::Deserializer::from_reader(stdin());
         let req = Request::deserialize(&mut de).unwrap();

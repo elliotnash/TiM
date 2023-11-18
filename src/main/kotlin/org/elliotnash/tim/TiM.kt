@@ -48,6 +48,8 @@ fun main(args: Array<String>): Unit = runBlocking {
         return@runBlocking
     }
 
+    logger.debug {"DEBUG TEST"}
+
     val client = Client(url, password)
     val listener = MessageListener(workerPath = workerFile.canonicalPath, poolSize = poolSize, prefix = prefix)
     client.registerEventListener(listener)

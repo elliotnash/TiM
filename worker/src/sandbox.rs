@@ -184,6 +184,7 @@ impl Sandbox {
 }
 
 impl WithSource<'_> {
+    #[allow(dead_code)]
     pub fn main_source(&self) -> &Source {
         &self.source
     }
@@ -192,6 +193,10 @@ impl WithSource<'_> {
 impl typst::World for WithSource<'_> {
     fn library(&self) -> &Prehashed<Library> {
         &self.sandbox.library
+    }
+
+    fn book(&self) -> &Prehashed<FontBook> {
+        &self.sandbox.book
     }
 
     fn main(&self) -> Source {
@@ -206,16 +211,12 @@ impl typst::World for WithSource<'_> {
         }
     }
 
-    fn book(&self) -> &Prehashed<FontBook> {
-        &self.sandbox.book
+    fn file(&self, id: FileId) -> FileResult<Bytes> {
+        self.sandbox.file(id).map(|file| file.bytes.clone())
     }
 
     fn font(&self, id: usize) -> Option<Font> {
         self.sandbox.fonts.get(id).cloned()
-    }
-
-    fn file(&self, id: FileId) -> FileResult<Bytes> {
-        self.sandbox.file(id).map(|file| file.bytes.clone())
     }
 
     fn today(&self, offset: Option<i64>) -> Option<typst::eval::Datetime> {

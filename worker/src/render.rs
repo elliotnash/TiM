@@ -15,7 +15,7 @@ pub fn render<S: AsRef<str> + Display>(code: S, options: RenderOptions) -> Sourc
 
     let source = options.preamble(code);
     let world = Sandbox::with_source(&sandbox, source.clone());
-    let mut document = typst::compile(&world, &mut tracer)?;
+    let document = typst::compile(&world, &mut tracer)?;
 
     let pixmap = typst::export::render_merged(&document.pages, 8f32, Color::from_u32(0), Abs::zero(), Color::from_u32(0));
 
