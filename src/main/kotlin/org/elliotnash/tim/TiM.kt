@@ -16,16 +16,17 @@ val json = Json
 private val logger = KotlinLogging.logger {}
 
 fun main(args: Array<String>): Unit = runBlocking {
-    if (args.size != 2) {
+    if (args.size != 3) {
         println("Error: Incorrect arguments!\nUsage: java -jar TiM.jar <path/to/.env> <path/to/worker>")
         return@runBlocking
     }
 
     val deFile = File(args[0])
     val workerFile = File(args[1])
+    val fontsDir = File(args[2])
 
-    if (!deFile.exists() || !workerFile.exists()) {
-        println("Error: Incorrect arguments!\nUsage: java -jar TiM.jar <path/to/.env> <path/to/worker>")
+    if (!deFile.isFile || !workerFile.isFile || !fontsDir.isDirectory) {
+        println("Error: Incorrect arguments!\nUsage: java -jar TiM.jar <path/to/.env> <path/to/worker> <path/to/fonts>")
         return@runBlocking
     }
 
@@ -51,7 +52,8 @@ fun main(args: Array<String>): Unit = runBlocking {
     logger.debug {"DEBUG TEST"}
 
     val client = Client(url, password)
-    val listener = MessageListener(workerPath = workerFile.canonicalPath, poolSize = poolSize, prefix = prefix)
+
+    val listener = MessageListener(prefix = prefix, renderer = TypstRenderer(workerFile.canonicalPath, fontsDir.canonicalPath, poolSize))
     client.registerEventListener(listener)
 
     Signal.handle(Signal("INT")) {

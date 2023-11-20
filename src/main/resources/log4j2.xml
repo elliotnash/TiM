@@ -6,7 +6,7 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Root level="DEBUG">
+        <Root level="${env:LOG_LEVEL:-INFO}">
             <appender-ref ref="console"/>
         </Root>
     </Loggers>

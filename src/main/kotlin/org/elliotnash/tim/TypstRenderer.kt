@@ -9,8 +9,7 @@ import java.lang.Exception
 
 private val logger = KotlinLogging.logger {}
 
-class MessageListener(val workerPath: String, val poolSize: Int, val prefix: String) : EventListener {
-    private val renderer = TypstRenderer(workerPath, poolSize)
+class MessageListener(private val prefix: String, private val renderer: TypstRenderer) : EventListener {
     private val codeRegex = Regex("(?<= |^)\\$[^$]+?\\$(?= |$)")
 
     override fun onMessage(message: Message) {
@@ -53,8 +52,8 @@ class MessageListener(val workerPath: String, val poolSize: Int, val prefix: Str
     }
 }
 
-class TypstRenderer(private val workerPath: String, val poolSize: Int) {
-    private val workerPool = List(poolSize) { Worker(workerPath) }
+class TypstRenderer(private val workerPath: String, private val fontDir: String, val poolSize: Int) {
+    private val workerPool = List(poolSize) { Worker(workerPath, fontDir) }
 
     private fun getPooledWorker() = workerPool.minBy { it.queueLength }
 

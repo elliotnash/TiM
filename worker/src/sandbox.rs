@@ -1,6 +1,6 @@
 use std::cell::{RefCell, RefMut};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use comemo::Prehashed;
 use typst::diag::{FileError, FileResult, PackageError, PackageResult};
@@ -40,8 +40,8 @@ pub struct Sandbox {
     files: RefCell<HashMap<FileId, FileEntry>>,
 }
 
-fn fonts() -> Vec<Font> {
-    std::fs::read_dir("fonts")
+fn fonts<P: AsRef<Path>>(font_dir: P) -> Vec<Font> {
+    std::fs::read_dir(font_dir)
         .unwrap()
         .map(Result::unwrap)
         .flat_map(|entry| {
@@ -85,8 +85,8 @@ pub struct WithSource<'a> {
 }
 
 impl Sandbox {
-    pub fn new(cache_dir: PathBuf) -> Self {
-        let fonts = fonts();
+    pub fn new<F: AsRef<Path>>(cache_dir: PathBuf, font_dir: F) -> Self {
+        let fonts = fonts(font_dir);
 
         Self {
             library: Prehashed::new(typst_library::build()),

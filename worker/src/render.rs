@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::path::Path;
 use tiny_skia::{Pixmap, PixmapPaint, Transform};
 use typst::diag::SourceResult;
 use typst::eval::Tracer;
@@ -9,9 +10,9 @@ use serde::{Deserialize, Serialize};
 use crate::sandbox::Sandbox;
 
 
-pub fn render<S: AsRef<str> + Display>(code: S, options: RenderOptions) -> SourceResult<Pixmap> {
+pub fn render<S: AsRef<str> + Display, P: AsRef<Path>>(code: S, options: RenderOptions, font_dir: P) -> SourceResult<Pixmap> {
     let mut tracer = Tracer::new();
-    let sandbox = Rc::new(Sandbox::new("./cache".into()));
+    let sandbox = Rc::new(Sandbox::new("./cache".into(), font_dir));
 
     let source = options.preamble(code);
     let world = Sandbox::with_source(&sandbox, source.clone());

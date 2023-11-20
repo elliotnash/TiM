@@ -9,7 +9,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.encodeToString
+import org.elliotnash.tim.PageSize
+import org.elliotnash.tim.Theme
 import org.elliotnash.tim.json
+import java.io.BufferedReader
+import java.io.IOException
 import java.util.concurrent.CompletableFuture
 import kotlin.concurrent.thread
 import kotlin.time.Duration
@@ -17,8 +21,8 @@ import kotlin.time.Duration.Companion.seconds
 
 const val EOT = 0x04
 
-class Worker(private val workerPath: String, val timeout: Duration = 4.seconds) {
-    private lateinit var process: Process
+class Worker(private val workerPath: String, private val fontDir: String, val timeout: Duration = 4.seconds) {
+    private var process: Process? = null
     private var requestChannel = Channel<QueuedRequest>(Channel.UNLIMITED)
     private val logger = KotlinLogging.logger("Worker@${hashCode().toString(16)}")
 
@@ -43,9 +47,36 @@ class Worker(private val workerPath: String, val timeout: Duration = 4.seconds) 
         logger.debug {"stopping worker"}
         rwAlive = false
         rwThread.interrupt()
-        process.destroy()
+        process?.errorReader()?.close()
+        logThread.interrupt()
+        process?.destroy()
         // Wait until thread stops
         while (rwThread.isAlive) {}
+        logger.debug {"RW THREAD DOWN"}
+        while (logThread.isAlive) {}
+        logger.debug {"LOG THREAD DOWN"}
+    }
+
+    var processErrReader: BufferedReader? = null
+
+    private val logThread = thread {
+        try {
+            while (!Thread.currentThread().isInterrupted) {
+                processErrReader = process?.errorReader()
+                if (processErrReader != null) {
+                    try {
+                        while(true) {
+                            val line = process!!.errorReader().readLine()
+                            if (line != null) {
+                                logger.debug { line }
+                            }
+                        }
+                    } catch (_: IOException) {}
+                }
+            }
+        } catch (_: InterruptedException) {
+            logger.debug {"LOG THREAD INTERRUPTED"}
+        }
     }
 
     private var rwAlive = true
@@ -64,8 +95,8 @@ class Worker(private val workerPath: String, val timeout: Duration = 4.seconds) 
                         // Once we have a request, we send it
                         val data = json.encodeToString(request.request)
                         withContext(Dispatchers.IO) {
-                            process.outputStream.write(data.toByteArray())
-                            process.outputStream.flush()
+                            process!!.outputStream.write(data.toByteArray())
+                            process!!.outputStream.flush()
                         }
 
                         // Now we read the response
@@ -77,8 +108,8 @@ class Worker(private val workerPath: String, val timeout: Duration = 4.seconds) 
                                 logger.debug { "Worker timed out!" }
                                 request.response.complete(null)
                                 break@process
-                            } else if (process.inputStream.available() > 0) {
-                                val byte = process.inputStream.read()
+                            } else if (process!!.inputStream.available() > 0) {
+                                val byte = process!!.inputStream.read()
                                 if (byte < 0) {
                                     // The process died, we need to start a new one :)
                                     logger.debug { "Worker died!" }
@@ -87,7 +118,9 @@ class Worker(private val workerPath: String, val timeout: Duration = 4.seconds) 
                                 }
                                 if (byte == EOT) {
                                     // We hit the terminator so our response is complete, time to parse
-                                    request.response.complete(tryParseResponse(buf.toString()))
+                                    val message = tryParseResponse(buf.toString())
+                                    logger.trace {"Received message: $message"}
+                                    request.response.complete(message)
                                     break
                                 } else {
                                     buf.append(byte.toChar())
@@ -97,18 +130,17 @@ class Worker(private val workerPath: String, val timeout: Duration = 4.seconds) 
                     }
 
                     // The process either died or we're shutting down, either way the old process should be cleaned up
-                    process.destroy()
+                    process?.destroy()
                 }
             }
         } catch (_: InterruptedException) {
             logger.debug {"thread interrupted"}
-            process.destroy()
+            process?.destroy()
         }
     }
 
     private fun newWorkerProcess(): Process {
-        logger.error {"creating new with $workerPath"}
-        return ProcessBuilder(workerPath).start()
+        return ProcessBuilder(workerPath, fontDir).start()
     }
 
     init {
@@ -118,6 +150,8 @@ class Worker(private val workerPath: String, val timeout: Duration = 4.seconds) 
                 val response = request(VersionRequest()) as VersionResponse
                 logger.debug {response.version}
                 _version.complete(response.version)
+
+//                val test = request(Render(RenderRequest("hi", RenderOptions(PageSize.Default, Theme.Dark, false))))
             }
         }
 

@@ -3,6 +3,7 @@ mod render;
 mod model;
 
 use std::io::{stdin, stdout, Write};
+use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use crate::model::{RenderRequest, Request, Response, VersionResponse};
 use crate::render::render;
@@ -10,13 +11,19 @@ use crate::render::render;
 const EOT: u8 = 0x04;
 
 fn main() {
+    let font_dir: PathBuf = std::env::args().nth(1).expect("No font directory passed!").into();
+    if !font_dir.is_dir() {
+        panic!("Font directory does not exist!")
+    }
+
+    eprintln!("Worker started");
     loop {
         let mut de = serde_json::Deserializer::from_reader(stdin());
         let req = Request::deserialize(&mut de).unwrap();
 
         let res = match req {
             Request::Version() => handle_version(),
-            Request::Render(req) => handle_render(req),
+            Request::Render(req) => handle_render(req, font_dir.clone()),
         };
 
         serde_json::to_writer(stdout(), &res).expect("TODO: panic message");
@@ -32,8 +39,8 @@ fn handle_version() -> Response {
     })
 }
 
-fn handle_render(request: RenderRequest) -> Response {
-    let res = render(&request.code, request.options);
+fn handle_render<P: AsRef<Path>>(request: RenderRequest, font_dir: P) -> Response {
+    let res = render(&request.code, request.options, font_dir);
     let res = match res {
         Ok(pixmap) => {
             pixmap.encode_png().map_err(|e| e.to_string())

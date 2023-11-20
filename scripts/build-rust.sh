@@ -47,19 +47,22 @@ rreadlink() ( # execute function in a *subshell* to localize the effect of `cd`,
 
 scriptDir=$(dirname -- "$(rreadlink "$BASH_SOURCE")")
 projectDir="$scriptDir"/..
+libsDir="$projectDir"/build/libs
 
 # Build rust
 cargo build --release --manifest-path="$projectDir"/worker/Cargo.toml
 
 # Copy executable
-cp "$projectDir"/worker/target/release/worker "$projectDir"/build/libs
+cp "$projectDir"/worker/target/release/worker "$libsDir"
 # Copy launch script
-cp "$scriptDir"/launch-script.sh "$projectDir"/build/libs/TiM
+cp "$scriptDir"/launch-script.sh "$libsDir"/TiM
+# Copy fonts
+cp -r "$projectDir"/fonts "$libsDir"
 # Mark both executable
-chmod +x "$projectDir"/build/libs/worker
-chmod +x "$projectDir"/build/libs/TiM
+chmod +x "$libsDir"/worker
+chmod +x "$libsDir"/TiM
 
 # Copy env if exists
 if [ -e "$projectDir"/.env ]
- then cp "$projectDir"/.env "$projectDir"/build/libs/.env
+ then cp "$projectDir"/.env "$libsDir"/.env
 fi

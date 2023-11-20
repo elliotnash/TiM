@@ -34,6 +34,4 @@ This will output 4 files in `build/libs` — the compiled jar, the rust worker b
 
 To run TiM, run `./TiM`
 
-> **_NOTE:_** Currently, the working directory must be the project root when running TiM
-
 A very basic systemd service file can be found is available [here](scripts/TiM.service)
