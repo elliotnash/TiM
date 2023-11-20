@@ -3,7 +3,7 @@ Description=TiM
 
 [Service]
 WorkingDirectory=/path/to/TiM/dir
-ExecStart=/path/to/TiM/dir/TiM
+ExecStart=/path/to/TiM/dir/build/libs/TiM
 
 Restart=always
 RestartSec=10
