@@ -1,8 +1,10 @@
 mod sandbox;
 mod render;
 mod model;
+mod logger;
 
 use std::io::{stdin, stdout, Write};
+use std::panic;
 use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use crate::model::{RenderRequest, Request, Response, VersionResponse};
@@ -11,12 +13,17 @@ use crate::render::render;
 const EOT: u8 = 0x04;
 
 fn main() {
+    logger::WorkerLogger::init();
+
     let font_dir: PathBuf = std::env::args().nth(1).expect("No font directory passed!").into();
     if !font_dir.is_dir() {
         panic!("Font directory does not exist!")
     }
 
-    eprintln!("Worker started");
+    log::debug!("Worker started");
+
+    // panic!("This is a test");
+
     loop {
         let mut de = serde_json::Deserializer::from_reader(stdin());
         let req = Request::deserialize(&mut de).unwrap();
@@ -26,9 +33,9 @@ fn main() {
             Request::Render(req) => handle_render(req, font_dir.clone()),
         };
 
-        serde_json::to_writer(stdout(), &res).expect("TODO: panic message");
-        stdout().write(&[EOT]).expect("TODO: panic message");
-        stdout().flush().unwrap();
+        serde_json::to_writer(stdout(), &res).expect("Failed to write response!");
+        stdout().write(&[EOT]).expect("Failed to write terminator!");
+        stdout().flush().expect("Failed to flush stderr!");
     }
 }
 

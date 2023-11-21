@@ -49,59 +49,6 @@ application {
     mainClass.set("org.elliotnash.tim.TiMKt")
 }
 
-//task<Exec>("buildWorkerDebug") {
-//    doFirst {
-//        workingDir("./worker")
-//        commandLine("cargo", "build")
-//    }
-//}
-//
-//task("buildWorkerRelease") {
-//    val cargo = ProcessBuilder("cargo", "build", "--release")
-//        .directory(file("worker"))
-//        .start()
-//
-//    // Block on rust building
-//    while(cargo.isAlive) {
-//        if (cargo.errorStream.available() > 0) {
-//            val b = cargo.errorStream.read()
-//            print(b.toChar())
-//        }
-//    }
-//}
-
-//task<Copy>("copyTest") {
-//    dependsOn("buildWorkerRelease")
-//    doLast {
-//        println("DOING LAST")
-//        from(file("worker/target/release/worker")).into(file("build/libs/worker"))
-//    }
-//}
-//
-//task<Exec>("copyFiles") {
-//    dependsOn("buildWorkerRelease")
-//
-//    // Copies rust worker
-//    val workerFile = file("build/libs/worker")
-//    workerFile.ensureParentDirsCreated()
-//    file("worker/target/release/worker").copyTo(workerFile, overwrite = true)
-//    commandLine("chmod", "+x", workerFile.canonicalPath)
-//    // Copies launcher script
-//    val launcherFile = file("build/libs/TiM")
-//    launcherFile.ensureParentDirsCreated()
-//    file("scripts/launch-script.sh").copyTo(launcherFile, overwrite = true)
-//    commandLine("chmod", "+x", launcherFile.canonicalPath)
-//    // Copies .env file
-//    file(".env").copyTo(file("build/libs/.env"), overwrite = true)
-//}
-
-//tasks.compileKotlin {
-////    dependsOn("buildWorkerRelease")
-//    dependsOn("copyFiles")
-//}
-
-
-
 tasks {
     val fatJar = register<Jar>("fatJar") {
         archiveFileName.set("TiM.jar")
@@ -116,7 +63,6 @@ tasks {
     }
 
     val buildRust = register<Exec>("buildRust") {
-        dependsOn.addAll(listOf("compileJava", "compileKotlin", "processResources"))
         doFirst {
             exec {
                 commandLine("chmod", "+x", "./scripts/build-rust.sh")
@@ -127,6 +73,13 @@ tasks {
 
     build {
         dependsOn(fatJar) // Trigger fat jar creation during build
+    }
+
+    // Build rust when building kotlin
+    compileKotlin {
+        dependsOn(buildRust)
+    }
+    compileTestKotlin {
         dependsOn(buildRust)
     }
 }

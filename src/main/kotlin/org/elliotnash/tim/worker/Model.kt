@@ -12,6 +12,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import org.elliotnash.tim.PageSize
 import org.elliotnash.tim.Theme
+import org.slf4j.event.Level
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -113,3 +114,12 @@ object RequestSerializer : JsonContentPolymorphicSerializer<Request>(Request::cl
         else -> VersionRequest.serializer()
     }
 }
+
+@Serializable
+data class LogMessage(
+    val message: String,
+    val level: Level,
+    val target: String,
+    val file: String?,
+    val line: Int?
+)

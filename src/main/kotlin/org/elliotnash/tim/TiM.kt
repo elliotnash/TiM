@@ -17,7 +17,7 @@ private val logger = KotlinLogging.logger {}
 
 fun main(args: Array<String>): Unit = runBlocking {
     if (args.size != 3) {
-        println("Error: Incorrect arguments!\nUsage: java -jar TiM.jar <path/to/.env> <path/to/worker>")
+        println("Error: Incorrect arguments!\nUsage: java -jar TiM.jar <path/to/.env> <path/to/worker> <path/to/fonts>")
         return@runBlocking
     }
 

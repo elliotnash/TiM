@@ -12,6 +12,7 @@ import kotlinx.serialization.encodeToString
 import org.elliotnash.tim.PageSize
 import org.elliotnash.tim.Theme
 import org.elliotnash.tim.json
+import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.IOException
 import java.util.concurrent.CompletableFuture
@@ -25,6 +26,7 @@ class Worker(private val workerPath: String, private val fontDir: String, val ti
     private var process: Process? = null
     private var requestChannel = Channel<QueuedRequest>(Channel.UNLIMITED)
     private val logger = KotlinLogging.logger("Worker@${hashCode().toString(16)}")
+    private val rustLogger = LoggerFactory.getLogger("Worker-Rust@${hashCode().toString(16)}")
 
     val isWorking
         get() = queueLength == 0
@@ -47,7 +49,6 @@ class Worker(private val workerPath: String, private val fontDir: String, val ti
         logger.debug {"stopping worker"}
         rwAlive = false
         rwThread.interrupt()
-        process?.errorReader()?.close()
         logThread.interrupt()
         process?.destroy()
         // Wait until thread stops
@@ -57,25 +58,36 @@ class Worker(private val workerPath: String, private val fontDir: String, val ti
         logger.debug {"LOG THREAD DOWN"}
     }
 
-    var processErrReader: BufferedReader? = null
-
     private val logThread = thread {
         try {
             while (!Thread.currentThread().isInterrupted) {
-                processErrReader = process?.errorReader()
-                if (processErrReader != null) {
+                if (process != null) {
                     try {
-                        while(true) {
-                            val line = process!!.errorReader().readLine()
-                            if (line != null) {
-                                logger.debug { line }
+                        // Read from stderr
+                        val buf = StringBuffer()
+                        while (!Thread.currentThread().isInterrupted && process != null) {
+                            if (process!!.errorStream.available() > 0) {
+                                val byte = process!!.errorStream.read()
+                                if (byte < 0) {
+                                    break
+                                }
+                                if (byte == EOT) {
+                                    // We hit the terminator so the log is complete, time to parse
+                                    try {
+                                        val message: LogMessage = json.decodeFromString(buf.toString())
+                                        rustLogger.atLevel(message.level).log("(${message.file}:${message.line}) - ${message.message}")
+                                    } catch (_: IllegalArgumentException) {}
+                                    break
+                                } else {
+                                    buf.append(byte.toChar())
+                                }
                             }
                         }
                     } catch (_: IOException) {}
                 }
             }
         } catch (_: InterruptedException) {
-            logger.debug {"LOG THREAD INTERRUPTED"}
+            logger.debug {"Log thread interrupted"}
         }
     }
 
@@ -134,7 +146,7 @@ class Worker(private val workerPath: String, private val fontDir: String, val ti
                 }
             }
         } catch (_: InterruptedException) {
-            logger.debug {"thread interrupted"}
+            logger.debug {"Read write thread interrupted"}
             process?.destroy()
         }
     }
