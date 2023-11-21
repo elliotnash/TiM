@@ -13,20 +13,24 @@ class MessageListener(private val prefix: String, private val renderer: TypstRen
     private val codeRegex = Regex("(?<= |^)\\$[^$]+?\\$(?= |$)")
 
     override fun onMessage(message: Message) {
-        val text = message.text.lowercase().trim()
+        val text = message.text.trim()
+            // Replace fancy quotes
+            .replace(Regex("[\u201C\u201D]"), "\"")
+            .replace(Regex("[\u2018\u2019]"), "\'")
+        val lc = text.lowercase()
         logger.trace {"received message: $text"}
         when {
-            text == "${prefix}ping" -> {
+            lc == "${prefix}ping" -> {
                 render(message, "#set text(fill: gradient.linear(..color.map.rainbow))\nPong!")
             }
-            text == "${prefix}bing" -> {
+            lc == "${prefix}bing" -> {
                 render(message, "#set text(fill: gradient.linear(rgb(\"#ff0000\"), rgb(\"#0000ff\")))\nBong!")
             }
-            text.startsWith("${prefix}render") -> {
-                render(message, message.text.substring(8))
+            lc.startsWith("${prefix}render") -> {
+                render(message, text.substring(8))
             }
             else -> {
-                val matches = codeRegex.findAll(message.text)
+                val matches = codeRegex.findAll(text)
                 for (match in matches) {
                     render(message, match.value)
                 }
