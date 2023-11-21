@@ -22,8 +22,6 @@ fn main() {
 
     log::debug!("Worker started");
 
-    // panic!("This is a test");
-
     loop {
         let mut de = serde_json::Deserializer::from_reader(stdin());
         let req = Request::deserialize(&mut de).unwrap();

@@ -24,8 +24,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
-
-    implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
+    implementation("com.akuleshov7:ktoml-core:0.5.0")
+    implementation("com.akuleshov7:ktoml-file:0.5.0")
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.7")

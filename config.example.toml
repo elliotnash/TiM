@@ -1,0 +1,4 @@
+bb_url = "https://bluebubbles.url"
+bb_password = "ServerP@ssword"
+pool_size = 5
+prefix = '!'

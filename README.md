@@ -21,17 +21,17 @@ git clone https://github.com/elliotnash/TiM.git
 cd TiM
 ```
 
-You must copy the `EXAMPLE.env` file to `.env`, and fill out the required parameters.
+You must copy the `config.example.toml` file to `config.toml`, and fill out the required parameters.
 If running on the same machine as BlueBubbles, `BB_URL` should be set to `http://localhost:{BB_PORT}`
 
 To compile TiM, run
 ```shell
-./gradlew fatJar
+./gradlew build
 ```
-This will output 4 files in `build/libs` — the compiled jar, the rust worker binary, a launcher script, and a copy of the .env file in the root. These output files need to remain in the same directory.
+This will output 4 files in `build/libs` — the compiled jar, the rust worker binary, a launcher script, and a copy of the .env file in the root. These output files need to remain together.
 
 ### Running
 
 To run TiM, run `./TiM`
 
-A very basic systemd service file can be found is available [here](scripts/TiM.service)
+A very basic systemd service file is available [here](scripts/TiM.service)

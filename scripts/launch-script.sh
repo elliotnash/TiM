@@ -47,4 +47,4 @@ rreadlink() ( # execute function in a *subshell* to localize the effect of `cd`,
 
 scriptDir=$(dirname -- "$(rreadlink "$BASH_SOURCE")")
 
-/usr/bin/env java -jar "$scriptDir"/TiM.jar "$scriptDir"/.env "$scriptDir"/worker "$scriptDir"/fonts
+/usr/bin/env java -jar "$scriptDir"/TiM.jar "$scriptDir"/config.toml "$scriptDir"/worker "$scriptDir"/fonts

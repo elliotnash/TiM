@@ -62,7 +62,7 @@ cp -r "$projectDir"/fonts "$libsDir"
 chmod +x "$libsDir"/worker
 chmod +x "$libsDir"/TiM
 
-# Copy env if exists
-if [ -e "$projectDir"/.env ]
- then cp "$projectDir"/.env "$libsDir"/.env
+# Copy config if exists
+if [ -e "$projectDir"/config.toml ]
+ then cp "$projectDir"/config.toml "$libsDir"/config.toml
 fi
