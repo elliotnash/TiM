@@ -65,7 +65,7 @@ class TypstRenderer(private val workerPath: String, private val fontDir: String,
         code: String,
         pageSize: PageSize = PageSize.Auto,
         theme: Theme = Theme.Dark,
-        transparent: Boolean = true
+        transparent: Boolean = false
     ): ByteArray {
         val options = RenderOptions(pageSize, theme, transparent)
         val request = RenderRequest(code, options)
