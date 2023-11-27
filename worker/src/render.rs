@@ -18,7 +18,7 @@ pub fn render<S: AsRef<str> + Display, P: AsRef<Path>>(code: S, options: RenderO
     let world = Sandbox::with_source(&sandbox, source.clone());
     let document = typst::compile(&world, &mut tracer)?;
 
-    let pixmap = typst::export::render_merged(&document.pages, 8f32, Color::from_u32(0), Abs::zero(), Color::from_u32(0));
+    let pixmap = typst::export::render_merged(&document.pages, 12f32, Color::from_u32(0), Abs::zero(), Color::from_u32(0));
 
     let aspect = pixmap.width() as f64 / pixmap.height() as f64;
 
@@ -68,7 +68,7 @@ impl Theme {
             match self {
                 Self::Light => "#set page(fill: white)\n",
                 Self::Dark => concat!(
-                "#set page(fill: rgb(49, 51, 56))\n",
+                "#set page(fill: black)\n",
                 "#set text(fill: rgb(219, 222, 225))\n",
                 ),
             }
